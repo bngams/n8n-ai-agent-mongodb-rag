@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # MongoDB with replica set for vector search support
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+      - ./scripts:/scripts
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - n8n-network
+
+  # MongoDB data loader - loads sample_mflix dataset
+  mongodb-loader:
+    image: mongo:7.0
+    container_name: mongodb-loader
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    networks:
+      - n8n-network
+    entrypoint: /bin/bash
+    command: /scripts/load-data.sh
+    restart: "no"
+
+  # n8n workflow automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Europe/Paris
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - n8n-network
+
+  # Ollama for local LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - n8n-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Fallback for CPU-only systems (comment out deploy section above if no GPU)
+
+  # Ollama model initializer - pulls mistral model on startup
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-init
+    depends_on:
+      - ollama
+    networks:
+      - n8n-network
+    entrypoint: /bin/sh
+    command: >
+      -c "
+      sleep 10 &&
+      ollama pull mistral:7b-instruct-q4_0 &&
+      ollama pull nomic-embed-text &&
+      echo 'Models pulled successfully'
+      "
+    restart: "no"
+
+volumes:
+  mongodb_data:
+  n8n_data:
+  ollama_data:
+
+networks:
+  n8n-network:
+    driver: bridge
