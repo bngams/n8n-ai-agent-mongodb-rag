@@ -5,9 +5,6 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: mongodb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin123
     ports:
       - "27017:27017"
     volumes:
@@ -36,7 +33,8 @@ services:
     networks:
       - n8n-network
     entrypoint: /bin/bash
-    command: /scripts/load-data.sh
+    command: >
+      -c "apt-get update -qq && apt-get install -y -qq curl > /dev/null 2>&1 && /scripts/load-data.sh"
     restart: "no"
 
   # n8n workflow automation
@@ -74,27 +72,28 @@ services:
       - OLLAMA_HOST=0.0.0.0
     networks:
       - n8n-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    # Fallback for CPU-only systems (comment out deploy section above if no GPU)
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Ollama model initializer - pulls mistral model on startup
   ollama-init:
     image: ollama/ollama:latest
     container_name: ollama-init
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     networks:
       - n8n-network
+    environment:
+      - OLLAMA_HOST=ollama:11434
     entrypoint: /bin/sh
     command: >
       -c "
-      sleep 10 &&
+      sleep 5 &&
       ollama pull mistral:7b-instruct-q4_0 &&
       ollama pull nomic-embed-text &&
       echo 'Models pulled successfully'

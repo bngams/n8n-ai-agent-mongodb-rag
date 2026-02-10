@@ -34,38 +34,38 @@ echo "📦 Loading data into MongoDB..."
 
 # Import each collection
 if [ -f comments.json ]; then
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=comments --file=comments.json --jsonArray 2>/dev/null || \
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=comments --file=comments.json
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=comments --file=comments.json --jsonArray 2>/dev/null || \
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=comments --file=comments.json
   echo "✅ Comments loaded"
 fi
 
 if [ -f movies.json ]; then
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=movies --file=movies.json --jsonArray 2>/dev/null || \
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=movies --file=movies.json
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=movies --file=movies.json --jsonArray 2>/dev/null || \
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=movies --file=movies.json
   echo "✅ Movies loaded"
 fi
 
 if [ -f theaters.json ]; then
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=theaters --file=theaters.json --jsonArray 2>/dev/null || \
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=theaters --file=theaters.json
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=theaters --file=theaters.json --jsonArray 2>/dev/null || \
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=theaters --file=theaters.json
   echo "✅ Theaters loaded"
 fi
 
 if [ -f users.json ]; then
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=users --file=users.json --jsonArray 2>/dev/null || \
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=users --file=users.json
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=users --file=users.json --jsonArray 2>/dev/null || \
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=users --file=users.json
   echo "✅ Users loaded"
 fi
 
 if [ -f sessions.json ]; then
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=sessions --file=sessions.json --jsonArray 2>/dev/null || \
-  mongoimport --uri="mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --collection=sessions --file=sessions.json
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=sessions --file=sessions.json --jsonArray 2>/dev/null || \
+  mongoimport --uri="mongodb://mongodb:27017/sample_mflix" --collection=sessions --file=sessions.json
   echo "✅ Sessions loaded"
 fi
 
 echo ""
 echo "🔍 Creating indexes..."
-mongosh "mongodb://admin:admin123@mongodb:27017/sample_mflix?authSource=admin" --quiet --eval "
+mongosh "mongodb://mongodb:27017/sample_mflix" --quiet --eval "
   db.movies.createIndex({ 'title': 1 });
   db.movies.createIndex({ 'year': 1 });
   db.movies.createIndex({ 'genres': 1 });

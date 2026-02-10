@@ -22,11 +22,11 @@ curl -L -o sessions.json "${BASE_URL}/sessions.json"
 echo "📦 Loading data into MongoDB..."
 
 # Import each collection
-mongoimport --uri="mongodb://admin:admin123@localhost:27017/sample_mflix?authSource=admin" --collection=comments --file=comments.json
-mongoimport --uri="mongodb://admin:admin123@localhost:27017/sample_mflix?authSource=admin" --collection=movies --file=movies.json
-mongoimport --uri="mongodb://admin:admin123@localhost:27017/sample_mflix?authSource=admin" --collection=theaters --file=theaters.json
-mongoimport --uri="mongodb://admin:admin123@localhost:27017/sample_mflix?authSource=admin" --collection=users --file=users.json
-mongoimport --uri="mongodb://admin:admin123@localhost:27017/sample_mflix?authSource=admin" --collection=sessions --file=sessions.json
+mongoimport --uri="mongodb://localhost:27017/sample_mflix" --collection=comments --file=comments.json
+mongoimport --uri="mongodb://localhost:27017/sample_mflix" --collection=movies --file=movies.json
+mongoimport --uri="mongodb://localhost:27017/sample_mflix" --collection=theaters --file=theaters.json
+mongoimport --uri="mongodb://localhost:27017/sample_mflix" --collection=users --file=users.json
+mongoimport --uri="mongodb://localhost:27017/sample_mflix" --collection=sessions --file=sessions.json
 
 # Clean up
 cd /
