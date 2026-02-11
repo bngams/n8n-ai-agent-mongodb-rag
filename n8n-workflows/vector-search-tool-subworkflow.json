@@ -1,0 +1,130 @@
+{
+  "name": "Vector Search Tool (Sub-workflow)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "execute-workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "search-query",
+              "name": "searchQuery",
+              "value": "={{ $('Execute Workflow Trigger').item.json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-query",
+      "name": "Extract Query",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://ollama:11434/api/embeddings",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"nomic-embed-text\",\n  \"prompt\": \"{{ $json.searchQuery }}\"\n}",
+        "options": {}
+      },
+      "id": "get-embedding",
+      "name": "Get Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "find",
+        "connectionString": "mongodb://mongodb:27017/?directConnection=true",
+        "database": "sample_mflix",
+        "collection": "embedded_movies",
+        "options": {}
+      },
+      "id": "fetch-movies",
+      "name": "Fetch Movies",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the query embedding\nconst queryEmbedding = $('Get Embedding').item.json.embedding;\n\n// Get all movies from MongoDB\nconst movies = $('Fetch Movies').all();\n\n// Get original query\nconst query = $('Extract Query').item.json.searchQuery;\n\n// Cosine similarity function\nfunction cosineSimilarity(a, b) {\n  let dotProduct = 0;\n  let normA = 0;\n  let normB = 0;\n\n  for (let i = 0; i < a.length; i++) {\n    dotProduct += a[i] * b[i];\n    normA += a[i] * a[i];\n    normB += b[i] * b[i];\n  }\n\n  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));\n}\n\nconsole.log('Searching for:', query);\nconsole.log('Total movies to search:', movies.length);\n\n// Calculate similarity for each movie\nconst results = movies.map(movie => {\n  const similarity = cosineSimilarity(queryEmbedding, movie.json.plot_embedding);\n\n  return {\n    json: {\n      title: movie.json.title,\n      plot: movie.json.plot,\n      year: movie.json.year,\n      genres: (movie.json.genres || []).join(', '),\n      similarity: similarity\n    }\n  };\n});\n\n// Sort by similarity and get top 3\nconst topResults = results\n  .sort((a, b) => b.json.similarity - a.json.similarity)\n  .slice(0, 3);\n\nconsole.log('Top match:', topResults[0]?.json.title, 'with', Math.round(topResults[0]?.json.similarity * 100) + '%');\n\n// Format as text for the AI\nconst formattedResults = topResults.map((r, i) => \n  `${i + 1}. **${r.json.title}** (${r.json.year})\\n` +\n  `   Genres: ${r.json.genres}\\n` +\n  `   Plot: ${r.json.plot}\\n` +\n  `   Match: ${Math.round(r.json.similarity * 100)}%`\n).join('\\n\\n');\n\nreturn [{\n  json: {\n    response: formattedResults || 'No movies found matching your query.'\n  }\n}];"
+      },
+      "id": "rank-results",
+      "name": "Rank Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Query": {
+      "main": [
+        [
+          {
+            "node": "Get Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Embedding": {
+      "main": [
+        [
+          {
+            "node": "Fetch Movies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Movies": {
+      "main": [
+        [
+          {
+            "node": "Rank Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-11T09:00:00.000Z",
+  "versionId": "1"
+}

@@ -79,7 +79,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # Ollama model initializer - pulls mistral model on startup
+  # Ollama model initializer - pulls llama3.2 (supports tools) and embedding model on startup
   ollama-init:
     image: ollama/ollama:latest
     container_name: ollama-init
@@ -94,9 +94,30 @@ services:
     command: >
       -c "
       sleep 5 &&
-      ollama pull mistral:7b-instruct-q4_0 &&
+      ollama pull llama3.2 &&
       ollama pull nomic-embed-text &&
       echo 'Models pulled successfully'
+      "
+    restart: "no"
+
+  # Embedding generator - creates vector embeddings for movies
+  embedding-generator:
+    image: python:3.11-slim
+    container_name: embedding-generator
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    networks:
+      - n8n-network
+    working_dir: /scripts
+    command: >
+      bash -c "
+      pip install -q pymongo requests tqdm &&
+      python3 generate-embeddings.py
       "
     restart: "no"
 

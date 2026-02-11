@@ -225,13 +225,23 @@ docker-compose down -v
 - [Ollama Models](https://ollama.com/library)
 - [MongoDB sample_mflix Dataset](https://www.mongodb.com/docs/atlas/sample-data/sample-mflix/)
 
-## 🎯 Next Steps
+## 🎯 Quick Start with AI Agent
 
-1. Create embeddings for movie plots to enable semantic search
-2. Add tools for the AI agent (search movies, get recommendations)
-3. Create a frontend chat interface
-4. Experiment with different prompts and models
-5. Add authentication and security for production use
+✅ **100 movies with embeddings** are ready to use!
+✅ **4 n8n workflows** ready to import
+✅ **Complete documentation** with examples
+
+### Get Started:
+
+1. **Import AI Agent workflows**: [AI-AGENT-TWO-WORKFLOW-SETUP.md](AI-AGENT-TWO-WORKFLOW-SETUP.md) ⭐ **START HERE**
+2. **Alternative workflows**: [IMPORT-WORKFLOWS.md](IMPORT-WORKFLOWS.md)
+3. **Quick reference**: [QUICK-REFERENCE.md](QUICK-REFERENCE.md)
+
+### Available Workflows:
+
+All workflows are in the [n8n-workflows/](n8n-workflows/) folder:
+- **ai-agent-chat-simple.json** - AI Chat Agent (main workflow) ⭐ **RECOMMENDED**
+- **vector-search-tool-subworkflow.json** - Vector Search Tool (required sub-workflow)
 
 ## 🔐 Security Notes
 

@@ -1,0 +1,94 @@
+{
+  "name": "AI Agent Movie Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I'm your movie expert AI. Ask me anything about movies!\n\nTry asking:\n- \"Recommend a movie about space exploration\"\n- \"What are good action movies?\"\n- \"Tell me about romantic comedies\"",
+        "options": {
+          "title": "Movie Expert AI",
+          "subtitle": "Powered by Vector Search",
+          "inputPlaceholder": "Ask me about movies..."
+        }
+      },
+      "id": "chat-trigger",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [240, 380],
+      "webhookId": "movie-chat"
+    },
+    {
+      "parameters": {
+        "agent": "reactAgent",
+        "options": {
+          "systemMessage": "You are a helpful movie expert assistant. When a user asks for movie recommendations or wants to find movies, use the searchMovies tool to find relevant movies from the database. Present the results in a friendly, conversational way. Include movie titles, years, plots, and genres from the search results."
+        }
+      },
+      "id": "ai-agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.1,
+      "position": [540, 380]
+    },
+    {
+      "parameters": {
+        "model": "llama3.2",
+        "options": {
+          "baseURL": "http://ollama:11434",
+          "temperature": 0.7
+        }
+      },
+      "id": "ollama-model",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [540, 200]
+    },
+    {
+      "parameters": {
+        "name": "searchMovies",
+        "description": "Search for movies using semantic/vector search. Use this when the user asks for movie recommendations or wants to find movies matching a description. Input should be a description of the type of movie (e.g., 'space adventure', 'romantic comedy', 'action thriller').",
+        "workflowId": "",
+        "source": "parameter",
+        "specifyInputSchema": true,
+        "inputSchema": {
+          "values": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": true
+            }
+          ]
+        }
+      },
+      "id": "tool-workflow",
+      "name": "Vector Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.1,
+      "position": [740, 380]
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-11T09:00:00.000Z",
+  "versionId": "1"
+}
